@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Twitch & Obs scenes integration.</title>
+        <link rel="stylesheet" href="https://bootswatch.com/4/yeti/bootstrap.min.css">
+        
+    </head>
+
+    <body style="background-color: rgb(240, 240, 240);">
+
+        <div class="container">
+            <div class="input-group mb-3" style="padding-top: 1%;">
+                <input type="text" class="form-control" placeholder="Twitch title" id="titleTextField" >
+                <div class="input-group-append">
+                  <button class="btn btn-primary " type="button" onclick="titleButtonPressed()">Change title</button>
+                </div>
+            </div>
+              
+            <div class="row row-cols-4 align-items-center " id="cards"> 
+                <div class="card border-dark shadow-lg" style="width: 18rem; height: 50%;">
+                    <img class="card-img" src="" alt="Card image cap" id="cardImage">
+                    <div class="card-body ">
+                        <h5 class="card-title" id="nick"></h5>
+                        
+                        <div class="row" style="padding-left: 14.1px;padding-top: 5px;">
+                            <button class="btn btn-danger" onclick="clearStorage()" style="width: 191px;margin-top: 5px;">Log Out</button>
+                         </div>
+                </div>
+            </div>
+       
+        </div>
+        
+    
+    
+    </body>
+    <script>
+        const {ipcRenderer} = require('electron');
+        const path = require('path')
+
+        ipcRenderer.on('newNotif',(e,user,msg,logo)=>{
+            Notification.requestPermission().then(result=>{
+            console.log('entro')
+            var myNotification = new Notification(user+': ',{
+                body:msg,
+                icon:logo,
+            })
+        });
+        })
+        
+       
+       document.querySelector('#cardImage').src= localStorage.getItem('logo')
+       document.querySelector('#nick').innerHTML=localStorage.getItem('username')
+      
+
+        function clearStorage(){
+            ipcRenderer.send('ClearStorageData')
+        }
+        
+        if(localStorage.length==0){
+                ipcRenderer.send('receiveLocalStorage',undefined)
+        }
+        else{
+            ipcRenderer.send('receiveLocalStorage',localStorage.token)
+        }
+
+        ipcRenderer.on('clearLocalStorage',e=>{
+            localStorage.clear();
+        })
+
+        function changeKey(){
+            ipcRenderer.send('changeKey');
+        }
+
+        ipcRenderer.on('setItemLocalStorage',(e,at,t,u,f)=>{
+            localStorage.setItem('token',at);
+            localStorage.setItem('username',u);
+            localStorage.setItem('title',t);
+            localStorage.setItem('logo',f);
+
+            console.log(document.querySelector('#titleTextField'))
+            document.querySelector('#titleTextField').value = t
+            var img= document.querySelector("#cardImage");
+            img.src = f;
+            document.querySelector('#nick').innerHTML=u;
+        });
+
+        ipcRenderer.on('gilada',(e,user,message)=>{
+            const cards = document.querySelectorAll('#card');
+            console.log(cards)
+            console.log(user+': '+message);
+        });
+
+        ipcRenderer.on('completeModify',(e,scene_name,twitch_game)=>{
+            var escenas = document.querySelectorAll('#scene_name');
+            for(let item of escenas){
+                if(item.innerHTML==scene_name){
+                    var card_game = item.parentElement.parentElement.querySelector('#twitch_game');
+                    card_game.innerHTML=twitch_game;
+                    break;
+                }
+            }
+        });
+
+        
+
+        ipcRenderer.on('scenes:SendList',(e,scenes)=>{
+    
+        
+            scenes.items.forEach(item=>{
+              
+                const newSceneTemplate= 
+                `
+                <div class = "col p-1" style="margin-top:20px" >
+                        <div class = "card shadow-sm" id="card" >
+                                <div class = "card text-center" >
+                                    <div class = "card-header">
+                                        <h5 class = "card-title">Escena:</h5>
+                                        <h6 class = "card-title" id="scene_name">${item.name}</h6>
+                                    </div>
+                                        
+                                    <div class = "card-body" style="" >
+                                        <h5>Twitch:</h5>
+                                        <h6 id = "twitch_game">${item.twitch_name}</h6>
+                                    </div>
+                                    <div class = "card-footer">
+                                        
+                                        <button class = "btn btn-primary btn-sm" id="btn" >
+                                            MODIFICAR
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                `;
+                
+        cards.innerHTML+=newSceneTemplate;
+
+        const btns = document.querySelectorAll('.btn.btn-primary.btn-sm');
+
+        const cartas = document.querySelectorAll('#card');
+        
+        cartas.forEach(carta =>{
+            carta.addEventListener('click', e=>{
+                var scene_name = carta.querySelector('#scene_name').innerHTML;
+                var game = carta.querySelector('#twitch_game').innerHTML;
+                console.log('Toca carta');
+                ipcRenderer.send('cardClicked',scene_name,game)
+                
+            })
+        });
+       
+        btns.forEach(btn=>{
+                    btn.addEventListener('click',e=>{
+                       
+                        var parent = e.target.parentElement.parentElement;
+                        var scene_name= parent.querySelector('#scene_name').innerHTML;    
+                        var twitch_game = parent.querySelector('#twitch_game').innerHTML; 
+                       
+
+                        ipcRenderer.send('modify',scene_name,twitch_game);
+                        e.stopPropagation();
+                    });
+                });
+            });
+
+        });
+
+        ipcRenderer.on('activeScene',(e,scene)=>{
+
+         
+            var escenas2 = document.querySelectorAll('.card.border-success');
+           
+            if(escenas2.length!=0){
+                for(let card of escenas2){
+                    card.classList.remove('border-success');
+                   // card.classList.add('border-dark');
+                }
+            }
+                var escenas = document.querySelectorAll('#scene_name');
+             
+                for(let item of escenas){
+                    if(item.innerHTML==scene){
+                        var card = item.parentElement.parentElement.parentElement;
+                        card.classList.add('border-success');
+                      
+                        break;
+                    }
+                }
+             });
+         
+        ipcRenderer.on('setTitle',(e,title)=>{
+            localStorage.setItem('title',title)
+            let textfield = document.querySelector("#titleTextField")
+            textfield.value = localStorage.getItem('title');
+        });
+       
+        function titleButtonPressed(){
+            let title = document.querySelector("#titleTextField").value
+            console.log(title);
+            ipcRenderer.send('buttonPressed', title);
+        }
+    </script>
+</html>

@@ -1,0 +1,51 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Modify Scene.</title>
+        <link rel="stylesheet" href="https://bootswatch.com/4/yeti/bootstrap.min.css">
+    </head>
+    <body>
+         
+    <form class="p-4">
+        <div class="form-group" >
+            <label>Scene name in OBS:</label>
+            <input type="text" id = "scene_name" class="form-control" placeholder="OBS Scene name" readonly  >
+        </div>
+        <div class="form-group">
+            <label>Twitch game: </label>
+            <input type="text" id = "twitch_game" class="form-control" placeholder="Twitch Game" >
+        </div>
+        <div class="text-center">
+        <button class= "btn btn-primary" id="btn">
+            Modify Scene
+         </button>
+        </div>
+    </form>
+
+    </body>
+
+    <script>
+        const {ipcRenderer} = require('electron');
+
+        var scene= document.querySelector('#scene_name');
+        var twitch_game= document.querySelector('#twitch_game');
+
+        ipcRenderer.send('getData');
+
+        ipcRenderer.on('setData',(e,name,game)=>{
+            console.log(name);
+            console.log(game);
+            scene.value=name;
+            twitch_game.value=game;
+        });
+
+        const btn = document.querySelector('#btn');
+
+        btn.addEventListener('click',e=>{
+            ipcRenderer.send('acceptModify',scene.value,twitch_game.value);
+        });
+
+
+    </script>
+</html>
