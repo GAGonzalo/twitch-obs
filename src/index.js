@@ -1,4 +1,4 @@
-const {app,BrowserWindow, ipcMain, Tray} = require('electron');
+const {app,BrowserWindow, ipcMain, Tray, autoUpdater} = require('electron');
 const url = require('url');
 const path = require('path');
 const fs = require('fs');
@@ -7,6 +7,9 @@ const OBSWebSocket = require('obs-websocket-js');
 const obs = new OBSWebSocket();
 const optsTwitchApi=require('./files/data.js');
 const ComfyJS = require('comfy.js')
+//const { autoUpdater2 } = require("electron-updater")
+
+//const autoUpdater = require('electron-updater')
 
 require('electron-reload')(__dirname, {
     electron: path.join(__dirname, '../node_modules', '.bin', 'electron')
@@ -15,6 +18,8 @@ require('electron-reload')(__dirname, {
 
 let access_token;
 let user_id;
+
+//asd
 
 let mainWindow;
 let authWindow;
@@ -25,6 +30,7 @@ let scenes;
 let authWindowClosable = false;
 let exiting = false
 let loggedOut=false
+let logged=false;
 
 
 let iconPath = path.join(__dirname, 'perf2.jpg')
@@ -261,35 +267,38 @@ function createMainWindow(){
         let tray = new Tray(iconPath);
         tray.on('click',()=>{
             mainWindow.show();
-            tray=null;
+            tray.destroy();
          })
         mainWindow.hide();
     })
 
     mainWindow.on('show',()=>{
-        getTitle().then(data =>{
-            user_id=data._id;
-            mainWindow.webContents.send('setTitle',data.status);
-            console.log(data);
-            
-            ComfyJS.Init(data.name);
-            console.log(data.name);
-            
-            ComfyJS.onCommand= (user,command,msg,flags,extra)=>{
-                console.log(user)
-                console.log(command)
-                console.log(msg)
-                console.log(flags)
-                console.log(extra)
+        if(!logged){
+            getTitle().then(data =>{
+                user_id=data._id;
+                mainWindow.webContents.send('setTitle',data.status);
+                //console.log(data);
 
-                if(command == 'notify' && (flags.broadcaster || flags.mod)){
-                    getPhoto(extra.userId).then(data2=>{
-                        var logo = data2.logo;
-                        mainWindow.webContents.send('newNotif',user,msg,logo)
-                    })
+                ComfyJS.Init(data.name);
+                console.log(data.name);
+
+                ComfyJS.onCommand= (user,command,msg,flags,extra)=>{
+                    console.log(user)
+                    console.log(command)
+                    console.log(msg)
+                    console.log(flags)
+                    console.log(extra)
+
+                    if(command == 'notify' && (flags.broadcaster || flags.mod)){
+                        getPhoto(extra.userId).then(data2=>{
+                            var logo = data2.logo;
+                            mainWindow.webContents.send('newNotif',user,msg,logo)
+                        })
+                    }
                 }
-            }
-        })
+            })
+            logged = true;
+        }
     })
 
 
@@ -485,6 +494,37 @@ function updateTitle(title){
 }
     
 
+// ----------  AUTO UPDATER ---------- \\
+
+/*autoUpdater.on('checking-for-update',()=>{
+    console.log('checking for updates');
+});
+autoUpdater.on('update-available',()=>{
+    console.log('update available');
+})
+
+autoUpdater.on('update-downloaded',(info)=>{
+    console.log(`info: ${info}`)
+})
+autoUpdater.on('update-not-available',()=>{
+    console.log('update not available');
+})
+
+autoUpdater.on('error',(error)=>{
+    console.log(`error updating: ${error}`)
+})
+autoUpdater.on('before-quit-for-update',()=>{
+    console.log('before quit for update');
+})
+
+
+//autoUpdater.setFeedURL(path.join(__dirname,app-update.yml));
+//autoUpdater.updateConfigPath= path.join(__dirname,"app-update.yml");
+autoUpdater.checkForUpdates();
+
+
+
+*/
 
 
 // COMENTARIOS ABSURDOS (QUE, PROBABLEMENTE ALGUN DIA ME SIRVIERON?) :

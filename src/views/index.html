@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Twitch & Obs scenes integration.</title>
         <link rel="stylesheet" href="https://bootswatch.com/4/yeti/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        
         
     </head>
 
@@ -29,16 +31,88 @@
                          </div>
                 </div>
             </div>
-       
         </div>
+        <div class="fab-container">
+            <nav class="navbar ">
+                <a href="#" class="fa fa-instagram nav-item" onclick="twitter()"></a>
+                <a href="#" class="fa fa-twitter nav-item" onclick="twitter()"></a>
+            </nav>
+
+            
+        </div>
+       
+
         
     
-    
     </body>
+    <style>
+        .form-control:hover{
+            border-color: rgba(0, 0, 0, 0.212);
+        }
+
+        .card.shadow-sm:hover{
+            border-color: rgba(0, 0, 0, 0.486);
+        }
+
+
+        .nav-item{
+            margin-right: 10px;
+        }
+
+        .fab-container{
+            position:fixed;
+            bottom:10px;
+            right: 0px;
+        }
+        
+        .fa-twitter{
+            width: 60px;
+            height: 60px;
+            background:lightskyblue;
+            text-decoration:none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color:white;
+            font-size: 30px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.25);
+            transition: 0.25s;
+        }
+
+        .fa-instagram{
+            width: 60px;
+            height: 60px;
+            background:#a01d72b0;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color:white;
+            font-size: 30px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.25);
+            right: 30px;
+            position:initial;
+            transition: 0.25s;
+        }
+
+        .fa-twitter:hover {
+        text-decoration: none;
+        color:#1a7d9c;
+        }
+        .fa-instagram:hover {
+        text-decoration: none;
+        color:#580839;
+        }
+    </style>
     <script>
         const {ipcRenderer} = require('electron');
         const path = require('path')
 
+        function asd(){
+            console.log('asd')
+        }
         ipcRenderer.on('newNotif',(e,user,msg,logo)=>{
             Notification.requestPermission().then(result=>{
             console.log('entro')
